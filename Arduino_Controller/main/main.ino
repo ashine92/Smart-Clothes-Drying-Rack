@@ -252,6 +252,10 @@ Mode currentMode = MODE_MENU;
 float temperature, humidity;
 int rainValue, lightValue;
 
+// Biến điều khiển từ xa
+bool remoteControl = false;
+int remoteCmd = -1; // -1 = Không lệnh, 0 = right, 1 = left
+
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
@@ -266,35 +270,57 @@ void setup() {
 
   dht.begin();
   stopMotor();
-  // lcd.backlight();
-  // initLCD();
-  // menu();
+  lcd.backlight();
+  initLCD();
+  menu();
   mySerial.println("ARDUINO:READY");
 }
 
 void loop() {
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
+  rainValue = analogRead(rainSensor);
+  lightValue = analogRead(lightSensor);
+
+  if (isnan(temperature) || isnan(humidity)) {
+    temperature = 0;
+    humidity = 0;
+  }
+
+  String data = "TEMP:" + String(temperature) + ",HUMI:" + String(humidity) +
+                  ",RAIN:" + String(rainValue) + ",LUX:" + String(lightValue);
+  mySerial.println(data);
+  
   if (mySerial.available() > 0) {
     String cmd = mySerial.readStringUntil('\n');
     Serial.print("Received from ESP32 (V4) : ");
     Serial.println(cmd);
-    processCommand(cmd);
-  } else {
-    temperature = dht.readTemperature();
-    humidity = dht.readHumidity();
-    rainValue = analogRead(rainSensor);
-    lightValue = analogRead(lightSensor);
-
-    if (isnan(temperature) || isnan(humidity)) {
-      temperature = 0;
-      humidity = 0;
+    if (cmd == "1") {
+      remoteControl = true;
+      remoteCmd = 1;
+    }
+    else if (cmd == "0") {
+      remoteControl = true;
+      remoteCmd = 0;
+    } else {
+      remoteControl = false;
+      stopMotor();
     }
 
-    String data = "TEMP:" + String(temperature) + ",HUMI:" + String(humidity) +
-                  ",RAIN:" + String(rainValue) + ",LUX:" + String(lightValue);
-    mySerial.println(data);
+    // Nếu đang trong chế độ điều khiển từ xa -> ưu tiên xử lý trước
+    if (remoteControl) {
+      if (remoteCmd == 1 && digitalRead(switch1Pin) == HIGH) {
+        left();
+      } else if (remoteCmd == 0 && digitalRead(switch2Pin) == HIGH) {
+        right();
+      } else {
+        stopMotor();
+      }
+    }
+    return;
   }
 
-  if (digitalRead(switch1Pin) == LOW || digitalRead(switch2Pin) == LOW) stopMotor();
+  // if (digitalRead(switch1Pin) == LOW || digitalRead(switch2Pin) == LOW) stopMotor();
 
   if (digitalRead(menuButton) == LOW) {
     currentMode = MODE_MENU;
@@ -304,15 +330,25 @@ void loop() {
 
   switch (currentMode) {
     case MODE_MENU:
-      if (digitalRead(aButton) == LOW) currentMode = MODE_AUTO;
-      else if (digitalRead(bButton) == LOW) currentMode = MODE_MANUAL;
+      if (digitalRead(aButton) == LOW) {
+        currentMode = MODE_AUTO;
+        delay(300);
+      }
+      else if (digitalRead(bButton) == LOW) {
+        currentMode = MODE_MANUAL;
+        delay(300);
+      }
       break;
 
     case MODE_AUTO:
       automaticMode(temperature, humidity, rainValue < 500, lightValue);
-      if (rainValue < 500 && digitalRead(switch1Pin) == HIGH) left();
-      else if (digitalRead(switch2Pin) == HIGH) right();
-      else stopMotor();
+      if (rainValue < 500) {
+        if (digitalRead(switch1Pin) == HIGH) left();
+        else stopMotor();
+      } else { 
+        if (digitalRead(switch2Pin) == HIGH) right();
+        else stopMotor();
+      }
       break;
 
     case MODE_MANUAL:
@@ -325,10 +361,159 @@ void loop() {
   delay(2000);
 }
 
+/*
 void processCommand(String cmd) {
-  if (cmd == "MO SAO: ON" && digitalRead(switch1Pin) == HIGH) left();
-  else if (cmd == "MO SAO: OFF" && digitalRead(switch2Pin) == HIGH) right();
+  if (cmd == "1" && digitalRead(switch1Pin) == HIGH) left();
+  else if (cmd == "0" && digitalRead(switch2Pin) == HIGH) right();
   else stopMotor();
 }
+*/
+
+/*
+// =========== TEST FULL CODE + UART + BLYNK
+#include <SoftwareSerial.h>
+#include <DHT.h>
+#include "control.h"
+#include "user_interface.h"
+
+#define menuButton 3
+#define aButton 5
+#define bButton 4
+
+#define rainSensor A0
+#define lightSensor A1
+#define dhtPin 6
+DHT dht(dhtPin, DHT11);
+
+int motorA1 = 8;
+int motorA2 = 9;
+int switch1Pin = 11;
+int switch2Pin = 10;
+
+SoftwareSerial mySerial(12, 13); // TX=12, RX=13
+
+enum Mode { MODE_MENU, MODE_AUTO, MODE_MANUAL, MODE_TIMER };
+Mode currentMode = MODE_MENU;
+
+float temperature, humidity;
+int rainValue, lightValue;
+
+// Biến điều khiển từ xa
+bool remoteControl = false;
+int remoteCmd = -1; // -1 = không lệnh, 0 = right, 1 = left
+
+void setup() {
+  Serial.begin(9600);
+  mySerial.begin(9600);
+
+  pinMode(menuButton, INPUT_PULLUP);
+  pinMode(aButton, INPUT_PULLUP);
+  pinMode(bButton, INPUT_PULLUP);
+  pinMode(motorA1, OUTPUT);
+  pinMode(motorA2, OUTPUT);
+  pinMode(switch1Pin, INPUT_PULLUP);
+  pinMode(switch2Pin, INPUT_PULLUP);
+
+  dht.begin();
+  stopMotor();
+  lcd.backlight();
+  initLCD();
+  menu();
+  mySerial.println("ARDUINO:READY");
+}
+
+void loop() {
+  // Nhận lệnh từ ESP32
+  if (mySerial.available() > 0) {
+    String cmd = mySerial.readStringUntil('\n');
+    Serial.print("Received from ESP32 (V4) : ");
+    Serial.println(cmd);
+
+    if (cmd == "1") {
+      remoteControl = true;
+      remoteCmd = 1;
+    }
+    else if (cmd == "0") {
+      remoteControl = true;
+      remoteCmd = 0;
+    }
+    else {
+      remoteControl = false;
+      stopMotor();
+    }
+  }
+
+  // Nếu đang trong chế độ điều khiển từ xa → ưu tiên xử lý trước
+  if (remoteControl) {
+    if (remoteCmd == 1 && digitalRead(switch1Pin) == HIGH) {
+      left();
+    } else if (remoteCmd == 0 && digitalRead(switch2Pin) == HIGH) {
+      right();
+    } else {
+      stopMotor();
+    }
+    return; // bỏ qua phần xử lý bên dưới để không bị stopMotor
+  }
+
+  // Đọc dữ liệu cảm biến và gửi về ESP32
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
+  rainValue = analogRead(rainSensor);
+  lightValue = analogRead(lightSensor);
+
+  if (isnan(temperature) || isnan(humidity)) {
+    temperature = 0;
+    humidity = 0;
+  }
+
+  String data = "TEMP:" + String(temperature) + ",HUMI:" + String(humidity) +
+                ",RAIN:" + String(rainValue) + ",LUX:" + String(lightValue);
+  mySerial.println(data);
+
+  // Dừng motor nếu công tắc giới hạn được nhấn
+  if (digitalRead(switch1Pin) == LOW || digitalRead(switch2Pin) == LOW) {
+    stopMotor();
+  }
+
+  // Xử lý nút menu
+  if (digitalRead(menuButton) == LOW) {
+    currentMode = MODE_MENU;
+    menu();
+    delay(300);
+  }
+
+  // Xử lý chế độ hoạt động
+  switch (currentMode) {
+    case MODE_MENU:
+      if (digitalRead(aButton) == LOW) {
+        currentMode = MODE_AUTO;
+        delay(300);
+      }
+      else if (digitalRead(bButton) == LOW) {
+        currentMode = MODE_MANUAL;
+        delay(300);
+      }
+      break;
+
+    case MODE_AUTO:
+      automaticMode(temperature, humidity, rainValue < 500, lightValue);
+      if (rainValue < 500) {
+        if (digitalRead(switch1Pin) == HIGH) left();
+        else stopMotor();
+      } else {
+        if (digitalRead(switch2Pin) == HIGH) right();
+        else stopMotor();
+      }
+      break;
+
+    case MODE_MANUAL:
+      manualMode();
+      if (digitalRead(bButton) == LOW && digitalRead(switch2Pin) == HIGH) right();
+      else if (digitalRead(aButton) == LOW && digitalRead(switch1Pin) == HIGH) left();
+      else stopMotor();
+      break;
+  }
+}
+*/
 
   
