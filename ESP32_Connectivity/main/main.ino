@@ -258,8 +258,8 @@ void loop() {
 #include <BlynkSimpleEsp32.h>
 
 char auth[] = "Vgw90965m5qrziPBnhwd-aNHzcrVxagf";
-char ssid[] = "PTIT.HCM_CanBo"; // PTIT.HCM_CanBo
-char pass[] = "";
+char ssid[] = "DKT_LAU2"; // PTIT.HCM_CanBo
+char pass[] = "Daikientai";
 
 HardwareSerial mySerial(1);
 BlynkTimer timer;

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include "user_interface.h"
-#include <TimeLib.h>         // Include TimeLib to handle time functions
+//#include <TimeLib.h>         // Include TimeLib to handle time functions
 
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
