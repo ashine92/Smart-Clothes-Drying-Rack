@@ -25,6 +25,7 @@
 - **Power Supply:** 12V/5V DC adapter
 
 ## 📂 File Structure
+```
 SmartClothesDryingRack/
 │
 ├── Arduino/
@@ -44,7 +45,7 @@ SmartClothesDryingRack/
 │   └── sensor_parser.cpp
 │
 └── README.md
-
+```
 ## 🔸Setup
 1. Upload `Arduino_Controller/main.ino` to your Arduino.
 2. Upload `ESP32_Connectivity/main.ino` to your ESP32.
