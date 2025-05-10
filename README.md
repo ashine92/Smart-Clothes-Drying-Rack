@@ -56,4 +56,3 @@ SmartClothesDryingRack/
 
 - **Name:** Nguyen Ngoc Hong Anh
 - **Email:** nguyenAtm0902@gmail.com
-- **Organization:** Group 2 - D22CQCI01-N - PTITHCM
