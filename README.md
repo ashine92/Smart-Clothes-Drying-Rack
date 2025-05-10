@@ -24,3 +24,35 @@
   - 3 Push buttons (mode switch, automatic control, manual control)
 - **Power Supply:** 12V/5V DC adapter
 
+## 📂 File Structure
+SmartClothesDryingRack/
+│
+├── Arduino/
+│   ├── main.ino
+│   ├── control.h
+│   ├── user_interface.h
+│   ├── control.cpp
+│   └── user_interface.cpp
+│
+├── ESP32/
+│   ├── main.ino
+│   ├── blynk_config.h
+│   ├── blynk_config.cpp
+│   ├── uart_comm.h
+│   ├── uart_comm.cpp
+│   ├── sensor_parser.h
+│   └── sensor_parser.cpp
+│
+└── README.md
+
+## 🔸Setup
+1. Upload `Arduino_Controller/main.ino` to your Arduino.
+2. Upload `ESP32_Connectivity/main.ino` to your ESP32.
+3. Configure WiFi credentials in `blynk_config.cpp`.
+4. Install Blynk app and set up virtual pins to control and monitor the device.
+
+## 👩‍💻 Author
+
+- **Name:** Nguyen Ngoc Hong Anh
+- **Email:** nguyenAtm0902@gmail.com
+- **Organization:** Group 2 - D22CQCI01-N - PTITHCM
