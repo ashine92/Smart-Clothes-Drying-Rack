@@ -31,8 +31,12 @@ SmartClothesDryingRack/
 ├── Arduino/
 │   ├── main.ino
 │   ├── control.h
-│   ├── user_interface.h
-│   ├── control.cpp
+│   ├── control.ino
+│   ├── remote.cpp
+│   ├── remote.h
+│   ├── sensor.cpp
+│   ├── sensor.h
+│   ├── user_interface.cpp
 │   └── user_interface.cpp
 │
 ├── ESP32/
