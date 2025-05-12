@@ -57,6 +57,4 @@ SmartClothesDryingRack/
 4. Install Blynk app and set up virtual pins to control and monitor the device.
 
 ## 👩‍💻 Author
-
-- **Name:** Nguyen Ngoc Hong Anh
 - **Email:** nguyenAtm0902@gmail.com
