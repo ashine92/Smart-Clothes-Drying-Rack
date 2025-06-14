@@ -163,3 +163,43 @@ flowchart TD
     
     ReadAnalog --> End([Return])
 ```
+
+## 6. Manual Mode Main Flow
+```mermaid
+flowchart TD
+    Start(["Manual Mode"]) --> DisplayUI["Hiển thị LCD:
+    'Manual Mode'
+    'A:Left B:Right'"]
+    
+    DisplayUI --> CheckButtons["Kiểm tra nút nhấn"]
+    
+    CheckButtons --> CheckButtonA{"Nút A
+    được nhấn?"}
+    
+    CheckButtonA -->|Yes| CheckSwitch1{"Kiểm tra
+    switch1Pin"}
+    CheckButtonA -->|No| CheckButtonB
+    
+    CheckSwitch1 -->|HIGH| MoveLeft["left():
+    - motorA1 = HIGH
+    - motorA2 = LOW"]
+    CheckSwitch1 -->|LOW| StopMotor1["stopMotor()"]
+    
+    CheckButtonB{"Nút B
+    được nhấn?"} -->|Yes| CheckSwitch2{"Kiểm tra
+    switch2Pin"}
+    CheckButtonB -->|No| StopMotor2["stopMotor()"]
+    
+    CheckSwitch2 -->|HIGH| MoveRight["right():
+    - motorA1 = LOW
+    - motorA2 = HIGH"]
+    CheckSwitch2 -->|LOW| StopMotor3["stopMotor()"]
+    
+    MoveLeft --> return
+    MoveRight --> return
+    StopMotor1 --> return
+    StopMotor2 --> return
+    StopMotor3 --> return
+    
+    
+```
